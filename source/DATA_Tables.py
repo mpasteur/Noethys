@@ -909,6 +909,7 @@ DB_DATA = {
                                     ("largeurTexte", "INTEGER", u"Largeur du bloc de texte"),
                                     ("norme", "VARCHAR(100)", u"Norme code-barres"),
                                     ("afficheNumero", "INTEGER", u"Affiche numéro code-barres"),
+                                    ("largeurBarre", "FLOAT", u"Largeur de barre"),
                                     ], # Objets des modèles de documents
 
     "questionnaire_categories": [("IDcategorie", "INTEGER PRIMARY KEY AUTOINCREMENT", u"ID"),

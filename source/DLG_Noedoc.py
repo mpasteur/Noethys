@@ -1030,7 +1030,7 @@ def AjouterBlocTexte(texte, xy, tailleFont=10, taillePolicePDF=8, nom=u"Bloc de 
     objet.SetTaillePolicePDF(taillePolicePDF)
     return objet
 
-def AjouterBarcode(xy, largeur=None, hauteur=None, nom=u"Code-barres", champ=None, norme="Extended39", afficheNumero=False, IDobjet=None, InForeground=True):
+def AjouterBarcode(xy, largeur=None, hauteur=None, nom=u"Code-barres", champ=None, norme="Extended39", afficheNumero=False, largeurBarre=0.54, IDobjet=None, InForeground=True):
     """ Création d'une image """
     objet = AjouterSpecial(xy, largeur, hauteur, nom, couleurFond=(250, 250, 50), InForeground=InForeground)
     objet.nom = nom
@@ -1045,6 +1045,7 @@ def AjouterBarcode(xy, largeur=None, hauteur=None, nom=u"Code-barres", champ=Non
     else :
         afficheNumero = False
     objet.afficheNumero = afficheNumero
+    objet.largeurBarre = largeurBarre
     objet.verrouillageLargeur = True
     objet.hauteurMin = 5
     objet.proprietes.append("barcode")
@@ -2404,17 +2405,21 @@ class Proprietes_codebarres(wx.Panel):
         self.ctrl_norme = CTRL_Normes(self)
         self.label_numero = wx.StaticText(self, -1, u"Numéro :")
         self.ctrl_numero = wx.CheckBox(self, -1, u"Afficher")
-        
+        self.label_largeurBarre = wx.StaticText(self, -1, u"Largeur de Barre :")
+        self.ctrl_largeurBarre = wx.TextCtrl(self, -1, u"0.54")
+
         self.ctrl_norme.SetToolTipString(u"Sélectionnez une norme pour ce code-barres")
         self.ctrl_numero.SetToolTipString(u"Cochez cette case pour afficher la valeur sous le code-barres")
 
         # Layout
         staticbox = wx.StaticBoxSizer(self.staticbox_staticbox, wx.VERTICAL)
-        grid_sizer_base = wx.FlexGridSizer(rows=3, cols=2, vgap=5, hgap=5)
+        grid_sizer_base = wx.FlexGridSizer(rows=4, cols=2, vgap=5, hgap=5)
         grid_sizer_base.Add(self.label_norme, 1, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL, 0)
         grid_sizer_base.Add(self.ctrl_norme, 1, wx.EXPAND, 5)
         grid_sizer_base.Add(self.label_numero, 1, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL, 0)
         grid_sizer_base.Add(self.ctrl_numero, 1, wx.EXPAND, 5)
+        grid_sizer_base.Add(self.label_largeurBarre, 1, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL, 0)
+        grid_sizer_base.Add(self.ctrl_largeurBarre, 1, wx.EXPAND, 5)
         grid_sizer_base.AddGrowableCol(1)
         staticbox.Add(grid_sizer_base, 1, wx.ALL|wx.EXPAND, 5)
         self.SetSizer(staticbox)
@@ -2423,6 +2428,8 @@ class Proprietes_codebarres(wx.Panel):
         # Binds
         self.Bind(wx.EVT_CHOICE, self.OnChangeNorme, self.ctrl_norme)
         self.Bind(wx.EVT_CHECKBOX, self.OnChangeAfficheNumero, self.ctrl_numero)
+
+        self.Bind(wx.EVT_TEXT, self.OnChangeLargeurBarre, self.ctrl_largeurBarre)
 
     def SetObjet(self, objet):
         if objet == self.objet :
@@ -2446,7 +2453,10 @@ class Proprietes_codebarres(wx.Panel):
 
     def GetAfficheNumero(self):
         return self.ctrl_numero.GetValue()
-    
+
+    def GetLargeurBarre(self):
+        return self.ctrl_largeurBarre.GetValue()
+
     def SetAfficheNumero(self, valeur):
         self.stopEvent = True
         self.ctrl_numero.SetValue(valeur)
@@ -2454,6 +2464,9 @@ class Proprietes_codebarres(wx.Panel):
 
     def OnChangeAfficheNumero(self, event):
         self.objet.afficheNumero = self.GetAfficheNumero()
+
+    def OnChangeLargeurBarre(self, event):
+        self.objet.largeurBarre = self.GetLargeurBarre()
 
 # -------------------------------------------------------------------------------------------------------------------------------
 
@@ -2664,6 +2677,12 @@ class MovingObjectMixin:
                 return 1
             else :
                 return 0
+        else:
+            return None
+
+    def GetLargeurBarre(self):
+        if hasattr(self, "largeurBarre"):
+            return self.largeurBarre
         else:
             return None
 
@@ -4491,6 +4510,7 @@ class Dialog(wx.Dialog):
                 ("largeurTexte", objet.GetLargeurTexte()),
                 ("norme", objet.GetNorme()),
                 ("afficheNumero", objet.GetAfficheNumero()),
+                ("largeurBarre", objet.GetLargeurBarre()),
                 ]
             
             # Sauvegarde de l'objet
@@ -4687,6 +4707,7 @@ def ImportationObjets(IDmodele=None, InForeground=True):
                     champ=objet["champ"],
                     norme=objet["norme"],
                     afficheNumero=objet["afficheNumero"],
+                    largeurBarre=objet["largeurBarre"],
                     IDobjet=objet["IDobjet"],
                     InForeground=InForeground,
                     )
@@ -5074,8 +5095,8 @@ def DessineObjetPDF(objet, canvas, valeur=None):
             if objet.norme == "Code128" : barcode = Code128(valeur, barHeight=hauteur, humanReadable=objet.afficheNumero)
             if objet.norme == "EAN13" : barcode = createBarcodeDrawing("EAN13", value="{:0>12}".format(valeur), barHeight=hauteur, humanReadable=objet.afficheNumero)
             if objet.norme == "EAN8" : barcode = createBarcodeDrawing("EAN8", value="{:0>7}".format(valeur), barHeight=hauteur, humanReadable=objet.afficheNumero)
-            if objet.norme == "Extended39" : barcode = Extended39(valeur, barHeight=hauteur, humanReadable=objet.afficheNumero)
-            if objet.norme == "Standard39" : barcode = Standard39(valeur, barHeight=hauteur, humanReadable=objet.afficheNumero)
+            if objet.norme == "Extended39" : barcode = Extended39(valeur, barHeight=hauteur, barWidth=objet.largeurBarre, humanReadable=objet.afficheNumero)
+            if objet.norme == "Standard39" : barcode = Standard39(valeur, barHeight=hauteur, barWidth=objet.largeurBarre, humanReadable=objet.afficheNumero, width=200)
             if objet.norme == "Extended93" : barcode = Extended93(valeur, barHeight=hauteur, humanReadable=objet.afficheNumero)
             if objet.norme == "Standard93" : barcode = Standard93(valeur, barHeight=hauteur, humanReadable=objet.afficheNumero)
             if objet.norme == "POSTNET" : barcode = POSTNET(valeur, barHeight=hauteur, humanReadable=objet.afficheNumero)
@@ -5127,7 +5148,7 @@ class Impression():
 if __name__ == u"__main__":
     app = wx.App(0)
     #wx.InitAllImageHandlers()
-    dialog_1 = Dialog(None, IDmodele=1,
+    dialog_1 = Dialog(None, IDmodele=2,
             nom="test", observations=u"", 
             IDfond=None, categorie="fond", taille_page=(210, 297))
     app.SetTopWindow(dialog_1)

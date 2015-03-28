@@ -151,8 +151,9 @@ if __name__ == u"__main__":
             "{IDINDIVIDU}" : str(3), 
             "{INDIVIDU_NOM}" : u"DUPOND", 
             "{INDIVIDU_PRENOM}" : u"Gérard",
+            "{CODEBARRES_ID_INDIVIDU}" : "I%06d" % 6,
             }
         listeValeurs.append(dictTemp)
     # Lance édition PDF
-    Impression(IDmodele=39, taillePage=(210, 297), listeValeurs=listeValeurs)
+    Impression(IDmodele=2, taillePage=(210, 297), listeValeurs=listeValeurs)
     app.MainLoop()
