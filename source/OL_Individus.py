@@ -7,13 +7,14 @@
 # Copyright:       (c) 2010-11 Ivan LUCAS
 # Licence:         Licence GNU GPL
 #------------------------------------------------------------------------
-
+from Logger import Logger
 
 from UTILS_Traduction import _
 
 import wx
 import CTRL_Bouton_image
 import datetime
+import time
 import GestionDB
 import DATA_Civilites as Civilites
 import UTILS_Titulaires
@@ -548,6 +549,8 @@ class ListView(FastObjectListView):
         # Ouverture de la fiche famille
         if IDfamille != None and IDfamille != -1 :
             import DLG_Famille
+            Logger("perfs").get().debug("[Liste ind] Ouverture FF")
+            start_time = time.time()
             dlg = DLG_Famille.Dialog(self, IDfamille)
             # Ouverture grille de l'individ
             if ouvrirGrille == True :
@@ -555,6 +558,8 @@ class ListView(FastObjectListView):
             # Ouverture fiche de l'individu
             if ouvrirFicheInd == True :
                 dlg.OuvrirFicheIndividu(IDindividu)
+            elapsed_time = time.time() - start_time
+            Logger("perfs").get().debug("[Liste ind] FF Ouverte : %s" % elapsed_time)
             if dlg.ShowModal() == wx.ID_OK:
                 self.MAJ(IDindividu)
             dlg.Destroy()

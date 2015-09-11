@@ -17,6 +17,8 @@ import time
 import wx
 import CTRL_Bouton_image
 import os
+import inspect
+from Logger import Logger
 
 try :
     import mysql.connector
@@ -94,7 +96,10 @@ class DB:
 
     def OuvertureFichierReseau(self, nomFichier,suffixe):
         """ Version RESEAU avec MYSQL """
-        print "[Ouverture Fichier reseau]"
+        print "[Fichier reseau] Ouverture "
+        curframe = inspect.currentframe()
+        calframe = inspect.getouterframes(curframe, 3)
+        print 'caller name:', calframe[2][1], calframe[2][3]
         start_time1 = time.time()
         try :
             from mysql.connector.constants import FieldType
@@ -110,11 +115,12 @@ class DB:
             # Connexion MySQL
             #my_conv = conversion
             #my_conv[FieldType.LONG] = int
-            print "   Ouverture d'une connexion a la bd"
+            Logger("perfs").get().debug("   Ouverture d'une connexion a la bd")
             start_time = time.time()
             self.connexion = mysql.connector.connect(host=host,user=user, passwd=passwd, port=int(port), database=nomFichier, use_unicode=True, pool_name = "mypool2%s" % suffixe,pool_size = 3) # db=dbParam,
             elapsed_time = time.time() - start_time
-            print "  --> connexion ouverte %s" % elapsed_time
+            Logger("perfs").get().debug("perf;opendb;%s" % elapsed_time)
+            Logger("perfs").get().debug("  --> connexion ouverte %s id [%s]" % (elapsed_time, self.connexion._cnx.connection_id))
             #self.connexion.set_character_set('utf8')
             self.cursor = self.connexion.cursor()
             
@@ -141,7 +147,7 @@ class DB:
         else:
             self.echec = 0
         elapsed_time1 = time.time() - start_time1
-        print "[Ouverture fichier reseau %s ]" % elapsed_time1
+        print "[Fichier reseau] Ouvert en %s " % elapsed_time1
 
     def GetNomFichierDefaut(self):
         nomFichier = ""
@@ -215,12 +221,20 @@ class DB:
         self.cursor.execute(req)
             
     def ExecuterReq(self, req):
+        # curframe = inspect.currentframe()
+        # calframe = inspect.getouterframes(curframe, 3)
+        # print 'caller name:', calframe[2][1], calframe[2][3]
+        start_time1 = time.time()
+
         if self.echec == 1 : return False
         # Pour parer le pb des () avec MySQL
         if self.isNetwork == True :
             req = req.replace("()", "(10000000, 10000001)")
         try:
             self.cursor.execute(req)
+            elapsed_time = time.time() - start_time1
+            Logger("perfs").get().debug("[BD] Execution Requete [%s] en %s " %  (req, elapsed_time))
+            Logger("perfs").get().debug("perf;req;%s" % elapsed_time)
         except Exception, err:
             print _(u"Requete SQL incorrecte :\n%s\nErreur detectee:\n%s") % (req, err)
             return 0
@@ -243,7 +257,9 @@ class DB:
             self.connexion.commit()
 
     def Close(self):
-        if self.echec == 1 : return
+        if self.echec == 1 :
+            print "echec ?????"
+            return
         if self.connexion:
             self.connexion.close()
     
@@ -1760,7 +1776,7 @@ def TestConnexionMySQL(typeTest="fichier", nomFichier=""):
     cursor=None
     # Test de connexion au réseau MySQL
     try :
-        connexion = mysql.connector.connect(host=host,user=user, passwd=passwd, port=int(port), use_unicode=True,pool_name = "mypool",pool_size = 1) # db=dbParam,
+        connexion = mysql.connector.connect(host=host,user=user, passwd=passwd, port=int(port), use_unicode=True,pool_name = "mypool-%s" % nomFichier,pool_size = 1) # db=dbParam,
         # connexion.set_character_set('utf8')
         cursor = connexion.cursor()
         dictResultats["connexion"] =  (True, None)
@@ -1790,7 +1806,8 @@ def TestConnexionMySQL(typeTest="fichier", nomFichier=""):
         except Exception, err :
             dictResultats["fichier"] =  (False, err)
 
-    connexion.close()
+    if connexion_ok == True :
+        connexion.close()
     return dictResultats
 
 

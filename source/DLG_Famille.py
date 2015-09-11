@@ -7,12 +7,13 @@
 # Copyright:       (c) 2010-11 Ivan LUCAS
 # Licence:         Licence GNU GPL
 #------------------------------------------------------------------------
-
+from Logger import Logger
 
 from UTILS_Traduction import _
 import wx
 import CTRL_Bouton_image
 import datetime
+import time
 
 import UTILS_Config
 import UTILS_Historique
@@ -136,6 +137,11 @@ class Notebook(wx.Notebook):
 
 class Dialog(wx.Dialog):
     def __init__(self, parent, IDfamille=None):
+        self.logger = Logger(self.__class__.__name__).get()   # accessing the "private" variables for each class
+
+        Logger("perfs").get().debug("[Fiche Famille] Init ")
+        start_time = time.time()
+
         wx.Dialog.__init__(self, parent, id=-1, name="fiche_famille", style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX|wx.THICK_FRAME)
         self.parent = parent
         self.IDfamille = IDfamille
@@ -195,8 +201,14 @@ class Dialog(wx.Dialog):
             wx.CallAfter(self.CreerPremierIndividu)
         
         # MAJ de l'onglet Informations
-        self.notebook.GetPageAvecCode("informations").MAJ() 
-        
+        Logger("perfs").get().debug("[Fiche Famille] MAJ de l'onglet Informations")
+        self.notebook.GetPageAvecCode("informations").MAJ()
+        Logger("perfs").get().debug("[Fiche Famille] MAJ de l'onglet Informations Fin")
+
+        elapsed_time = time.time() - start_time
+        self.logger.debug("[Fiche Famille] Init Fin")
+        Logger("perfs").get().debug("[Fiche Famille] init en : %s " % elapsed_time)
+
 
     def __set_properties(self):
         self.SetTitle(_(u"Fiche familiale n°%d") % self.IDfamille)
@@ -224,6 +236,8 @@ class Dialog(wx.Dialog):
         self.SetMinSize((960, 710))
 
     def __do_layout(self):
+        print "[Fiche Famille] Layout "
+        start_time = time.time()
         grid_sizer_base = wx.FlexGridSizer(rows=3, cols=1, vgap=10, hgap=10)
         
         sizer_composition = wx.StaticBoxSizer(self.sizer_composition_staticbox, wx.VERTICAL)
@@ -274,7 +288,9 @@ class Dialog(wx.Dialog):
         else:
             self.SetSize(taille_fenetre)        
         self.CenterOnScreen() 
-    
+        elapsed_time = time.time() - start_time
+        print "[Fiche Famille] Layout effectue : ", elapsed_time
+
     def CreerPremierIndividu(self):
         IDindividu = self.ctrl_composition.Ajouter()
         # Renseigne le premier individu comme titulaire Hélios
