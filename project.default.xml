@@ -1,0 +1,20 @@
+<application>
+  <component name="ProjectManager">
+    <defaultProject>
+      <component name="Encoding">
+        <file url="PROJECT" charset="UTF-8" />
+      </component>
+      <component name="ProjectModuleManager">
+        <modules>
+          <module fileurl="file://$USER_HOME$/PycharmProjects/noethys_orig/.idea/noethys_orig.iml" filepath="$USER_HOME$/PycharmProjects/noethys_orig/.idea/noethys_orig.iml" />
+        </modules>
+      </component>
+      <component name="ProjectRootManager" version="2" project-jdk-name="Unknown at C:\Python27\python.exe" project-jdk-type="Python SDK" />
+      <component name="PropertiesComponent">
+        <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+        <property name="last_opened_file_path" value="C:/Python27/python.exe" />
+        <property name="settings.editor.splitter.proportion" value="0.2" />
+      </component>
+    </defaultProject>
+  </component>
+</application>
